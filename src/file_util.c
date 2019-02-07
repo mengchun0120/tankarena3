@@ -9,7 +9,8 @@ char *read_text(const char *file_name)
         return NULL;
     }
 
-    long size = fseek(fp, 0, SEEK_END);
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
     char *buffer = (char *)malloc(size + 1);
 
     rewind(fp);

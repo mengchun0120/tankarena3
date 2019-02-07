@@ -8,7 +8,10 @@
 #include <GLFW/glfw3.h>
 GLFWwindow* window;
 
-int main( void )
+#include "program.h"
+Program g_program;
+
+int main(int argc, char *argv[])
 {
     // Initialise GLFW
     if( !glfwInit() )
@@ -45,6 +48,14 @@ int main( void )
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
+    pg_build(&g_program, argv[1], argv[2]);
+
+    if(g_program.program == 0) {
+        fprintf(stderr, "pg_build failed\n");
+        glfwTerminate();
+        return -1;
+    }
+
     // Dark blue background
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
@@ -62,6 +73,7 @@ int main( void )
     while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0 );
 
+    pg_destroy(&g_program);
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
 
