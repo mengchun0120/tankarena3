@@ -54,36 +54,36 @@ GLuint link_program(GLuint vertex_shader, GLuint frag_shader)
     return program;
 }
 
-void pg_init(Program *pg)
+void reset_program(Program *pg)
 {
     pg->program = 0;
     pg->vertex_shader = 0;
     pg->frag_shader = 0;
 }
 
-void pg_build(Program *pg, const char *vertex_shader_file, const char *frag_shader_file)
+void build_program(Program *pg, const char *vertex_shader_file, const char *frag_shader_file)
 {
-    pg_init(pg);
+    reset_program(pg);
 
     pg->vertex_shader = compile_shader(GL_VERTEX_SHADER, vertex_shader_file);
     if(pg->vertex_shader == 0) {
-        pg_destroy(pg);
+        destroy_program(pg);
         return;
     }
 
     pg->frag_shader = compile_shader(GL_FRAGMENT_SHADER, frag_shader_file);
     if(pg->frag_shader == 0) {
-        pg_destroy(pg);
+        destroy_program(pg);
         return;
     }
 
     pg->program = link_program(pg->vertex_shader, pg->frag_shader);
     if(pg->program == 0) {
-        pg_destroy(pg);
+        destroy_program(pg);
     }
 }
 
-void pg_destroy(Program *pg)
+void destroy_program(Program *pg)
 {
     if(pg->program != 0) {
         if(pg->vertex_shader != 0) {
@@ -106,5 +106,5 @@ void pg_destroy(Program *pg)
         glDeleteProgram(pg->program);
     }
 
-    pg_init(pg);
+    reset_program(pg);
 }

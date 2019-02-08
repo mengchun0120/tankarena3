@@ -13,11 +13,11 @@ typedef struct ProgramType {
     GLuint frag_shader;
 } Program;
 
-void pg_init(Program *pg);
+void reset_program(Program *pg);
 
-void pg_build(Program *pg, const char *vertex_shader_file, const char *frag_shader_file);
+void build_program(Program *pg, const char *vertex_shader_file, const char *frag_shader_file);
 
-void pg_destroy(Program *pg);
+void destroy_program(Program *pg);
 
 #ifdef __cplusplus
 }

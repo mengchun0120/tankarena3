@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-    pg_build(&g_program, argv[1], argv[2]);
+    build_program(&g_program, argv[1], argv[2]);
 
     if(g_program.program == 0) {
         fprintf(stderr, "pg_build failed\n");
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0 );
 
-    pg_destroy(&g_program);
+    destroy_program(&g_program);
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
 
