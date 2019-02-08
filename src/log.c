@@ -38,13 +38,13 @@ int log_time(Logger *logger)
     }
 
     struct tm t;
-    if(gmtime_r(&tp.tv_sec, &t) == NULL) {
+    if(localtime_r(&tp.tv_sec, &t) == NULL) {
         return -1;
     }
 
     int ms = tp.tv_nsec / 1e6;
     return write_log(logger, "%04d-%02d-%02d %02d:%02d:%02d.%03d",
-                    t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour,
+                    (t.tm_year+1900), t.tm_mon, t.tm_mday, t.tm_hour,
                     t.tm_min, t.tm_sec, ms);
 }
 

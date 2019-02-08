@@ -12,10 +12,11 @@ GLuint compile_shader(GLenum type, const char *file)
         return 0;
     }
 
-    LOG_INFO("Comiple source type %d:\n%s", type, source);
+    LOG_INFO("Comiple shader %d using source:\n%s", type, source);
 
     GLuint shader = glCreateShader(type);
     if(shader == 0) {
+        LOG_ERROR("Failed to create shader %d", type);
         free(source);
         return 0;
     }
@@ -28,8 +29,20 @@ GLuint compile_shader(GLenum type, const char *file)
 
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_status);
     if(compile_status == 0) {
+        GLint info_len;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
+        char *info = (char *)malloc(info_len + 1);
+
+        glGetShaderInfoLog(shader, info_len, NULL, info);
+        LOG_INFO("Results of compilation:\n%s", info);
+
+        free(info);
+
+        LOG_ERROR("Compilation failed");
         glDeleteShader(shader);
         shader = 0;
+    } else {
+        LOG_INFO("Compilation is successful");
     }
 
     free(source);
@@ -40,6 +53,7 @@ GLuint link_program(GLuint vertex_shader, GLuint frag_shader)
 {
     GLuint program = glCreateProgram();
     if(program == 0) {
+        LOG_ERROR("Failed to create program");
         return 0;
     }
 
@@ -51,7 +65,19 @@ GLuint link_program(GLuint vertex_shader, GLuint frag_shader)
 
     glGetProgramiv(program, GL_LINK_STATUS, &link_status);
     if(link_status == 0) {
+        GLint info_len;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_len);
+        char *info = (char *)malloc(info_len + 1);
+
+        glGetProgramInfoLog(program, info_len, NULL, info);
+        LOG_INFO("Results of linking:\n%s", info);
+
+        free(info);
+
+        LOG_ERROR("Linking failed");
         return 0;
+    } else {
+        LOG_INFO("Linking is successful");
     }
 
     return program;
