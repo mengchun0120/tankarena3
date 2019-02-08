@@ -1,18 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-// Include GLEW
 #include <GL/glew.h>
-
-// Include GLFW
 #include <GLFW/glfw3.h>
+#include "log.h"
+#include "program.h"
+
 GLFWwindow* window;
 
-#include "program.h"
 Program g_program;
 
 int main(int argc, char *argv[])
 {
+    setup_log(&g_logger, argv[3], LEVEL_DEBUG);
+
     // Initialise GLFW
     if( !glfwInit() )
     {
@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
            glfwWindowShouldClose(window) == 0 );
 
     destroy_program(&g_program);
+    close_log(&g_logger);
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
 

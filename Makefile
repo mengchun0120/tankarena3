@@ -5,7 +5,7 @@ TEST_SOURCES=$(shell find test/src -name '*.c')
 TEST_OBJS=$(TEST_SOURCES:test/src/%.c=test/build/%.o)
 LIBS=$(shell pkg-config --static --libs x11 xrandr xi xxf86vm glew glfw3)
 TARGET=tankarena3
-CFLAGS=-Werror -g -Isrc
+CFLAGS=-Werror -g -Isrc -DENABLE_LOG
 
 .PHONY: build
 

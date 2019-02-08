@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include "file_util.h"
 #include "program.h"
+#include "log.h"
 
 GLuint compile_shader(GLenum type, const char *file)
 {
@@ -10,6 +11,8 @@ GLuint compile_shader(GLenum type, const char *file)
     if(source == NULL) {
         return 0;
     }
+
+    LOG_INFO("Comiple source type %d:\n%s", type, source);
 
     GLuint shader = glCreateShader(type);
     if(shader == 0) {
