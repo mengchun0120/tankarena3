@@ -1,9 +1,19 @@
 #include <malloc.h>
 #include <string.h>
-#include <GL/glew.h>
 #include "file_util.h"
 #include "program.h"
 #include "log.h"
+
+const char *shader_name(GLenum type) {
+    switch(type) {
+    case GL_VERTEX_SHADER:
+        return "vertex shader";
+    case GL_FRAGMENT_SHADER:
+        return "fragment shader";
+    }
+
+    return "invalid shader";
+}
 
 GLuint compile_shader(GLenum type, const char *file)
 {
@@ -12,7 +22,7 @@ GLuint compile_shader(GLenum type, const char *file)
         return 0;
     }
 
-    LOG_INFO("Comiple shader %d using source:\n%s", type, source);
+    LOG_INFO("Comiple %s using source:\n%s", shader_name(type), source);
 
     GLuint shader = glCreateShader(type);
     if(shader == 0) {
@@ -90,26 +100,29 @@ void reset_program(Program *pg)
     pg->frag_shader = 0;
 }
 
-void build_program(Program *pg, const char *vertex_shader_file, const char *frag_shader_file)
+int build_program(Program *pg, const char *vertex_shader_file, const char *frag_shader_file)
 {
     reset_program(pg);
 
     pg->vertex_shader = compile_shader(GL_VERTEX_SHADER, vertex_shader_file);
     if(pg->vertex_shader == 0) {
         destroy_program(pg);
-        return;
+        return -1;
     }
 
     pg->frag_shader = compile_shader(GL_FRAGMENT_SHADER, frag_shader_file);
     if(pg->frag_shader == 0) {
         destroy_program(pg);
-        return;
+        return -1;
     }
 
     pg->program = link_program(pg->vertex_shader, pg->frag_shader);
     if(pg->program == 0) {
         destroy_program(pg);
+        return -1;
     }
+
+    return 0;
 }
 
 void destroy_program(Program *pg)

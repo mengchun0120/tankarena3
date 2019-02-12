@@ -14,8 +14,13 @@ default: build
 build/%.o: src/%.c
 	gcc $(CFLAGS) -c -o $@ $<
 
-build: $(OBJS)
+build: $(OBJS) check_dir
 	gcc $(CFLAGS) -o build/$(TARGET) $(OBJS) $(LIBS)
+
+check_dir:
+	if [ ! -d "build" ]; then \
+		mkdir build; \
+	fi
 
 clean:
 	rm -f build/*

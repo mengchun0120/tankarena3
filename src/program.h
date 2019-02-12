@@ -1,5 +1,5 @@
-#ifndef INCLUDED_OPENGL_UTIL
-#define INCLUDED_OPENGL_UTIL
+#ifndef INCLUDED_PROGRAM
+#define INCLUDED_PROGRAM
 
 #include <GL/glew.h>
 
@@ -15,7 +15,7 @@ typedef struct ProgramType {
 
 void reset_program(Program *pg);
 
-void build_program(Program *pg, const char *vertex_shader_file, const char *frag_shader_file);
+int build_program(Program *pg, const char *vertex_shader_file, const char *frag_shader_file);
 
 void destroy_program(Program *pg);
 
