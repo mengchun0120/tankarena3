@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <malloc.h>
 #include "file_util.h"
+#include "log.h"
 
 char *read_text(const char *file_name)
 {
     FILE *fp = fopen(file_name, "rb");
     if(fp == NULL) {
+        LOG_ERROR("Failed to open file %s", file_name);
         return NULL;
     }
 
@@ -17,6 +19,7 @@ char *read_text(const char *file_name)
     fread(buffer, 1, size, fp);
 
     if(ferror(fp)) {
+        LOG_ERROR("Failed to read from file %s", file_name);
         return NULL;
     }
 

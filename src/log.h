@@ -23,6 +23,8 @@ typedef struct LoggerType {
 
 extern Logger g_logger;
 
+void init_log(Logger *logger);
+
 int setup_log(Logger *logger, const char *log_file, LogLevel min_level);
 
 int write_log(Logger *logger, const char *format, ...);

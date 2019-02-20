@@ -19,6 +19,7 @@ GLuint compile_shader(GLenum type, const char *file)
 {
     char *source = read_text(file);
     if(source == NULL) {
+        LOG_ERROR("Failed to read text from %s", file);
         return 0;
     }
 

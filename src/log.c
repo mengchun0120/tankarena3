@@ -11,11 +11,20 @@ const char *g_level_str[] = {
     "ERROR"
 };
 
+void init_log(Logger *logger)
+{
+    logger->fp = NULL;
+}
+
 int setup_log(Logger *logger, const char *log_file, LogLevel min_level)
 {
-    logger->fp = fopen(log_file, "a");
-    if(logger->fp == NULL) {
-        return -1;
+    if(log_file != NULL) {
+        logger->fp = fopen(log_file, "a");
+        if(logger->fp == NULL) {
+            return -1;
+        }
+    } else {
+        logger->fp = stdout;
     }
 
     logger->min_level = min_level;
@@ -50,5 +59,7 @@ int log_time(Logger *logger)
 
 int close_log(Logger *logger)
 {
-    fclose(logger->fp);
+    if(logger->fp != stdout) {
+        fclose(logger->fp);
+    }
 }

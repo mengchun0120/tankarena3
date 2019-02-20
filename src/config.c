@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <malloc.h>
+#include <stdlib.h>
 #include "config.h"
 #include "log.h"
 
@@ -50,21 +51,81 @@ int parse_line(char *line, char **name, char **value)
     }
 
     *name = line + start;
+    line[start + len] = '\0';
 
     eq_pos++;
     trim(eq_pos, &start, &len);
     *value = eq_pos + start;
+    eq_pos[start + len] = '\0';
+
+    return 0;
+}
+
+int find_config_item(ConfigItem *items, int item_count, const char *name)
+{
+    int i = 0;
+    for(i = 0; i < item_count; ++i) {
+        if(strcmp(items[i].name, name) == 0) {
+            break;
+        }
+    }
+
+    return i < item_count ? i : -1;
+}
+
+void set_value(ConfigItem *item, const char *value)
+{
+    switch(item->type) {
+    case INT:
+        *((int *)(item->mem)) = atoi(value);
+        item->set = 1;
+        break;
+    case DOUBLE:
+        *((double *)(item->mem)) = atof(value);
+        item->set = 1;
+        break;
+    case STRING: {
+            char **str = (char **)(item->mem);
+            *str = (char *)malloc(strlen(value) + 1);
+            strcpy(*str, value);
+            item->set = 1;
+            break;
+        }
+    }
+}
+
+int validate_config_items(ConfigItem *items, int item_count)
+{
+    int i;
+    for(i = 0; i < item_count; ++i) {
+        if(items[i].required && !items[i].set) {
+            LOG_ERROR("Parameter %s is required, but not set", items[i].name);
+            return -1;
+        }
+    }
 
     return 0;
 }
 
 void init_config(Config *cfg)
 {
-    cfg->first = NULL;
+    cfg->width = 0;
+    cfg->height = 0;
+    cfg->simple_vertex_shader_file = NULL;
+    cfg->simple_frag_shader_file = NULL;
+    cfg->title = NULL;
 }
 
 int read_config(Config *cfg, const char *file)
 {
+    ConfigItem items[] = {
+        { "width", INT, &(cfg->width), 1, 0 },
+        { "height", INT, &(cfg->height), 1, 0 },
+        { "simple_vertex_shader_file", STRING, &(cfg->simple_vertex_shader_file), 1, 0 },
+        { "simple_frag_shader_file", STRING, &(cfg->simple_frag_shader_file), 1, 0 },
+        { "title", STRING, &(cfg->title), 1, 0 }
+    };
+
     FILE *fp = fopen(file, "r");
     if(fp == NULL) {
         LOG_ERROR("Failed to open file %s", file);
@@ -74,6 +135,7 @@ int read_config(Config *cfg, const char *file)
     size_t len = 1000;
     char *buffer = (char *)malloc(len);
     int retval = 0;
+    int item_count = sizeof(items) / sizeof(ConfigItem);
 
     while(getline(&buffer, &len, fp) != -1) {
         char *name, *value;
@@ -82,11 +144,21 @@ int read_config(Config *cfg, const char *file)
             break;
         }
 
-        add_config(cfg, name, value);
+        LOG_INFO("Reading %s = %s", name, value);
+
+        int i = find_config_item(items, item_count, name);
+        if(i == -1) {
+            LOG_WARN("Unknown parameter name %s", name);
+            continue;
+        }
+
+        set_value(&items[i], value);
     }
 
     if(ferror(fp)) {
         LOG_ERROR("Failed to read file %s", file);
+        retval = -1;
+    } else if(validate_config_items(items, item_count) == -1) {
         retval = -1;
     }
 
@@ -96,36 +168,9 @@ int read_config(Config *cfg, const char *file)
     return retval;
 }
 
-void add_config(Config *cfg, const char *name, const char *value)
-{
-    ConfigItem *cfg_item = (ConfigItem *)malloc(sizeof(ConfigItem));
-    cfg_item->name = (char *)malloc(strlen(name) + 1);
-    strcpy(cfg_item->name, name);
-    cfg_item->value = (char *)malloc(strlen(value) + 1);
-    strcpy(cfg_item->value, value);
-    cfg_item->next = cfg->first;
-    cfg->first = cfg_item;
-}
-
-const char *find_config(Config *cfg, const char *name)
-{
-    ConfigItem *cfg_item;
-    for(cfg_item = cfg->first; cfg_item != NULL; cfg_item = cfg_item->next) {
-        if(strcmp(cfg_item->name, name) == 0) {
-            break;
-        }
-    }
-    return cfg_item != NULL ? cfg_item->value : NULL;
-}
-
 void destroy_config(Config *cfg)
 {
-    ConfigItem *cfg_item, *next_item;
-    for(cfg_item = cfg->first; cfg_item != NULL; cfg_item = next_item) {
-        next_item = cfg_item->next;
-        free(cfg_item->name);
-        free(cfg_item->value);
-        free(cfg_item);
-    }
-    cfg->first = NULL;
+    free(cfg->simple_vertex_shader_file);
+    free(cfg->simple_frag_shader_file);
+    free(cfg->title);
 }
