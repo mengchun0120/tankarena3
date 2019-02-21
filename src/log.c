@@ -19,7 +19,7 @@ void init_log(Logger *logger)
 int setup_log(Logger *logger, const char *log_file, LogLevel min_level)
 {
     if(log_file != NULL) {
-        logger->fp = fopen(log_file, "a");
+        logger->fp = fopen(log_file, "w");
         if(logger->fp == NULL) {
             return -1;
         }

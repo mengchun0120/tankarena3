@@ -1,6 +1,7 @@
 #include "app.h"
 #include "config.h"
 #include "log.h"
+#include "vertex_buffer.h"
 
 int init_window(App *app, Config *cfg)
 {
@@ -51,16 +52,39 @@ int init_app(App *app, Config *cfg)
         return -1;
     }
 
-    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+    glUseProgram(app->simple_pg.pg.program);
+    glClearColor(0.0f, 0.0f, 0.4f, 1.0f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     return 0;
 }
 
 int run_app(App *app)
 {
-    do{
-        glClear( GL_COLOR_BUFFER_BIT );
+    GLfloat vertex[] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.0f, 1.0f
+    };
 
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+
+    /* Bind our Vertex Array Object as the current used object */
+    glBindVertexArray(vao);
+
+    GLuint buffer_id = create_vertex_buffer(vertex, sizeof(vertex));
+    set_vertex_buffer_pointer(buffer_id, app->simple_pg.pos_loc, 2, 0);
+
+    glUniform4f(app->simple_pg.color_loc, 1.0f, 0.0f, 0.0f, 1.0f);
+    LOG_INFO("dd %d", glGetError());
+
+    do{
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        LOG_INFO("ff %d", glGetError());
 
         // Swap buffers
         glfwSwapBuffers(app->window);
