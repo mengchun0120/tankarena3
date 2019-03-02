@@ -1,7 +1,7 @@
 #include "app.h"
 #include "config.h"
 #include "log.h"
-#include "vertex_buffer.h"
+#include "texture_util.h"
 
 int init_window(App *app, Config *cfg)
 {
@@ -26,6 +26,7 @@ int init_window(App *app, Config *cfg)
     }
     glfwMakeContextCurrent(app->window);
 
+    glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK) {
         LOG_ERROR("Failed to initialize GLEW");
         glfwTerminate();
@@ -62,29 +63,52 @@ int init_app(App *app, Config *cfg)
 
 int run_app(App *app)
 {
-    GLfloat vertex[] = {
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        0.0f, 1.0f
+    float vertices[] = {
+        // positions  // texture coords
+         0.5f,  0.5f, 1.0f, 1.0f, // top right
+         0.5f, -0.5f, 1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f, 1.0f  // top left
+    };
+    unsigned int indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
     };
 
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
+    unsigned int VBO, VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-    /* Bind our Vertex Array Object as the current used object */
-    glBindVertexArray(vao);
+    glBindVertexArray(VAO);
 
-    GLuint buffer_id = create_vertex_buffer(vertex, sizeof(vertex));
-    set_vertex_buffer_pointer(buffer_id, app->simple_pg.pos_loc, 2, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glUniform4f(app->simple_pg.color_loc, 1.0f, 0.0f, 0.0f, 1.0f);
-    LOG_INFO("dd %d", glGetError());
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(app->simple_pg.pos_loc, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(app->simple_pg.pos_loc);
+    // texture coord attribute
+    glVertexAttribPointer(app->simple_pg.tex_coord_loc, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(app->simple_pg.tex_coord_loc);
+
+    glUniform1i(app->simple_pg.sampler_loc, 0);
+    glUniform1i(app->simple_pg.use_tex_loc, 1);
+
+    int width, height;
+    GLuint texture = load_texture("base0.png", &width, &height);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
     do{
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        LOG_INFO("ff %d", glGetError());
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // Swap buffers
         glfwSwapBuffers(app->window);

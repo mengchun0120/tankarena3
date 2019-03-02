@@ -126,6 +126,33 @@ int build_program(Program *pg, const char *vertex_shader_file, const char *frag_
     return 0;
 }
 
+int load_shader_param(Program *pg, const ShaderParamConfig *param_cfg, unsigned int param_count)
+{
+    for(unsigned int i = 0; i < param_count; ++i) {
+        GLint loc = -1;
+        switch(param_cfg[i].type) {
+        case UNIFORM_PARAM:
+            loc = glGetUniformLocation(pg->program, param_cfg[i].name);
+            break;
+        case ATTRIB_PARAM:
+            loc = glGetAttribLocation(pg->program, param_cfg[i].name);
+            break;
+        default:
+            LOG_ERROR("Wrong param type %d", param_cfg[i].type);
+            return -1;
+        }
+
+        if(loc == -1) {
+            LOG_ERROR("Failed to find %s", param_cfg[i].name);
+            return -1;
+        }
+
+        *(param_cfg[i].location) = loc;
+    }
+
+    return 0;
+}
+
 void destroy_program(Program *pg)
 {
     if(pg->program != 0) {

@@ -10,19 +10,17 @@ int build_simple_program(SimpleProgram *simple_pg, const char *vertex_shader_fil
         return -1;
     }
 
-    GLuint program = simple_pg->pg.program;
+    ShaderParamConfig param_cfg[] = {
+        { &simple_pg->pos_loc, "pos", ATTRIB_PARAM },
+        { &simple_pg->color_loc, "color", UNIFORM_PARAM },
+        { &simple_pg->use_tex_loc, "useTex", UNIFORM_PARAM },
+        { &simple_pg->tex_coord_loc, "texCoord", ATTRIB_PARAM },
+        { &simple_pg->sampler_loc, "sampler", UNIFORM_PARAM }
+    };
 
-    simple_pg->pos_loc = glGetAttribLocation(program, "pos");
-    if(simple_pg->pos_loc == -1) {
+    if(-1 == load_shader_param(&simple_pg->pg, param_cfg, sizeof(param_cfg)/sizeof(ShaderParamConfig))) {
+        LOG_ERROR("Failed to load parameters from shader");
         destroy_program(&simple_pg->pg);
-        LOG_ERROR("Couldn't find attribute pos");
-        return -1;
-    }
-
-    simple_pg->color_loc = glGetUniformLocation(program, "color");
-    if(simple_pg->color_loc == -1) {
-        destroy_program(&simple_pg->pg);
-        LOG_ERROR("Couldn't find uniform color");
         return -1;
     }
 
