@@ -1,28 +1,36 @@
 #ifndef INCLUDE_APP
 #define INCLUDE_APP
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include "simple_program.h"
+#include "simpleprogram.h"
 #include "config.h"
+#include <GLFW/glfw3.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace ta3 {
 
-typedef struct AppType {
-    GLFWwindow* window;
-    SimpleProgram simple_pg;
-} App;
+class App {
+public:
+    static App& getSingleton();
 
-int init_app(App *app, Config *cfg);
+    static bool initSingleton(const Config& cfg);
 
-int run_app(App *app);
+    ~App();
 
-void destroy_app(App *app);
+    bool init(const Config& cfg);
 
-#ifdef __cplusplus
-}
-#endif
+    bool run();
+
+private:
+    App();
+
+    bool initWindow(const Config& cfg);
+
+    bool initOpenGL();
+
+private:
+    GLFWwindow* m_window;
+    SimpleProgram m_program;
+};
+
+} // end of namespace ta3
 
 #endif

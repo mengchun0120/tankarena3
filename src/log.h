@@ -3,45 +3,62 @@
 
 #include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace ta3 {
 
-typedef enum LogLevelType {
-    LEVEL_DEBUG,
-    LEVEL_INFO,
-    LEVEL_WARN,
-    LEVEL_ERROR
-} LogLevel;
+class Logger {
+public:
+    enum LogLevel {
+        LEVEL_DEBUG,
+        LEVEL_INFO,
+        LEVEL_WARN,
+        LEVEL_ERROR
+    };
 
-extern const char *g_level_str[];
+    static Logger& getSingleton();
 
-typedef struct LoggerType {
-    FILE *fp;
-    LogLevel min_level;
-} Logger;
+    static bool initSingleton(const char* logFile, LogLevel minLevel);
 
-extern Logger g_logger;
+    static const char* levelString(LogLevel level);
 
-void init_log(Logger *logger);
+    ~Logger();
 
-int setup_log(Logger *logger, const char *log_file, LogLevel min_level);
+    void write(const char *format, ...);
 
-int write_log(Logger *logger, const char *format, ...);
+    void logTime();
 
-int log_time(Logger *logger);
+    LogLevel minLevel() const
+    {
+        return m_minLevel;
+    }
 
-int close_log(Logger *logger);
+    bool valid() const
+    {
+        return m_fp != nullptr;
+    }
+
+    void flush();
+
+    void close();
+
+private:
+    Logger(const char* logFile, LogLevel minLevel);
+
+    FILE *m_fp;
+    LogLevel m_minLevel;
+};
+
+} // end of namespace ta3
 
 #ifdef ENABLE_LOG
 #define LOG_WRITE(level, ...) \
     { \
-        if(g_logger.fp != NULL && level >= g_logger.min_level) { \
-            log_time(&g_logger); \
-            write_log(&g_logger, " %s:%d %s ", __FILE__, __LINE__, g_level_str[level]); \
-            write_log(&g_logger, __VA_ARGS__); \
-            write_log(&g_logger, "\n"); \
-            fflush(g_logger.fp); \
+        ta3::Logger& logger = ta3::Logger::getSingleton(); \
+        if(logger.valid() && level >= logger.minLevel()) { \
+            logger.logTime(); \
+            logger.write(" %s:%d %s ", __FILE__, __LINE__, ta3::Logger::levelString(level)); \
+            logger.write(__VA_ARGS__); \
+            logger.write("\n"); \
+            logger.flush(); \
         } \
     }
 #else
@@ -49,19 +66,15 @@ int close_log(Logger *logger);
 #endif
 
 #define LOG_DEBUG(...) \
-    LOG_WRITE(LEVEL_DEBUG, __VA_ARGS__)
+    LOG_WRITE(ta3::Logger::LEVEL_DEBUG, __VA_ARGS__)
 
 #define LOG_INFO(...) \
-    LOG_WRITE(LEVEL_INFO, __VA_ARGS__)
+    LOG_WRITE(ta3::Logger::LEVEL_INFO, __VA_ARGS__)
 
 #define LOG_WARN(...) \
-    LOG_WRITE(LEVEL_WARN, __VA_ARGS__)
+    LOG_WRITE(ta3::Logger::LEVEL_WARN, __VA_ARGS__)
 
 #define LOG_ERROR(...) \
-    LOG_WRITE(LEVEL_ERROR, __VA_ARGS__)
-
-#ifdef __cplusplus
-}
-#endif
+    LOG_WRITE(ta3::Logger::LEVEL_ERROR, __VA_ARGS__)
 
 #endif

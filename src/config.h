@@ -1,41 +1,41 @@
 #ifndef INCLUDE_CONFIG
 #define INCLUDE_CONFIG
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <string>
 
-typedef enum ConfigValueTypeEnum {
-    INT,
-    STRING,
-    DOUBLE
-} ConfigValueType;
+namespace ta3 {
 
-typedef struct ConfigItemStruct {
-    const char *name;
-    ConfigValueType type;
-    void *mem;
-    int required;
-    int set;
-} ConfigItem;
+class Config {
+public:
+    enum ConfigValueType {
+        TYPE_INT,
+        TYPE_STRING,
+        TYPE_DOUBLE
+    };
 
-typedef struct ConfigType {
-    int width;
-    int height;
-    char *simple_vertex_shader_file;
-    char *simple_frag_shader_file;
-    char *title;
-} Config;
+    struct ConfigItem {
+        const char* m_name;
+        ConfigValueType m_type;
+        void* m_mem;
+        bool m_required;
+        bool m_set;
+    };
 
-void init_config(Config *cfg);
+public:
+    Config();
 
-int read_config(Config *cfg, const char *file);
+    ~Config();
 
-void destroy_config(Config *cfg);
+    bool load(const char* fileName);
 
-#ifdef __cplusplus
-}
-#endif
+public:
+    int m_width;
+    int m_height;
+    std::string m_simpleVertexShaderFile;
+    std::string m_simpleFragShaderFile;
+    std::string m_title;
+};
 
+} // end of namespace ta3
 
 #endif

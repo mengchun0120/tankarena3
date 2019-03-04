@@ -1,21 +1,21 @@
-SOURCES=$(shell find src -name '*.c')
-OBJS=$(SOURCES:src/%.c=build/%.o)
+SOURCES=$(shell find src -name '*.cpp')
+OBJS=$(SOURCES:src/%.cpp=build/%.o)
 TEST_LIBS=build/file_util.o build/opengl_util.o
-TEST_SOURCES=$(shell find test/src -name '*.c')
+TEST_SOURCES=$(shell find test/src -name '*.cpp')
 TEST_OBJS=$(TEST_SOURCES:test/src/%.c=test/build/%.o)
 LIBS=$(shell pkg-config --static --libs x11 xrandr xi xxf86vm glew glfw3)
 TARGET=tankarena3
-CFLAGS=-Werror -g -Isrc -DENABLE_LOG
+CPPFLAGS=-std=c++11 -Werror -g -Isrc -DENABLE_LOG
 
 .PHONY: build
 
 default: build
 
-build/%.o: src/%.c
-	gcc $(CFLAGS) -c -o $@ $<
+build/%.o: src/%.cpp
+	g++ $(CPPFLAGS) -c -o $@ $<
 
 build: check_dir $(OBJS)
-	gcc $(CFLAGS) -o build/$(TARGET) $(OBJS) $(LIBS)
+	g++ $(CPPFLAGS) -o build/$(TARGET) $(OBJS) $(LIBS)
 
 check_dir:
 	if [ ! -d "build" ]; then \
@@ -26,10 +26,10 @@ clean:
 	rm -f build/*
 
 test/build/%.o: test/src/%.c $(TEST_LIBS)
-	gcc $(CFLAGS) -c -o $@ $<
+	g++ $(CPPFLAGS) -c -o $@ $<
 
 test/build/test: $(TEST_OBJS) $(TEST_LIBS)
-	gcc $(CFLAGS) -o $@ $(TEST_LIBS) $(TEST_OBJS) $(LIBS)
+	g++ $(CPPFLAGS) -o $@ $(TEST_LIBS) $(TEST_OBJS) $(LIBS)
 
 build_test: $(TEST_OBJS) test/build/test
 

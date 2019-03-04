@@ -1,15 +1,90 @@
+#include <memory>
 #include "app.h"
-#include "config.h"
 #include "log.h"
-#include "texture_util.h"
 
-int init_window(App *app, Config *cfg)
+namespace ta3 {
+
+static std::shared_ptr<App> g_app;
+
+App& App::getSingleton()
+{
+    return *g_app;
+}
+
+bool App::initSingleton(const Config& cfg)
+{
+    if(g_app) {
+        LOG_ERROR("App singleton already initialized");
+        return false;
+    }
+
+    App *app = new App();
+    if(!app->init(cfg)) {
+        LOG_ERROR("Failed to initialize App");
+        delete app;
+        return false;
+    }
+
+    g_app.reset(app);
+    return true;
+}
+
+App::App()
+: m_window(nullptr)
+{
+}
+
+App::~App()
+{
+    if(m_window != nullptr) {
+        glfwTerminate();
+    }
+}
+
+bool App::init(const Config& cfg)
+{
+    if(!initWindow(cfg)) {
+        LOG_ERROR("Failed to initialize window");
+        return false;
+    }
+
+    if(!m_program.build(cfg.m_simpleVertexShaderFile, cfg.m_simpleFragShaderFile)) {
+        LOG_ERROR("Failed to build shader program");
+        return false;
+    }
+
+    if(!m_program.initParam()) {
+        LOG_ERROR("Failed to initialize shader program parameters");
+        return false;
+    }
+
+    if(!initOpenGL()) {
+        LOG_ERROR("Failed to initialize OpenGL");
+        return false;
+    }
+
+    return true;
+}
+
+bool App::run()
+{
+    while(glfwWindowShouldClose(m_window) == 0) {
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glfwSwapBuffers(m_window);
+        glfwPollEvents();
+    }
+
+    return true;
+}
+
+bool App::initWindow(const Config& cfg)
 {
     LOG_INFO("Initializing window");
 
     if(!glfwInit()) {
         LOG_ERROR("Failed to initialize GLFW");
-        return -1;
+        return false;
     }
 
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -18,26 +93,36 @@ int init_window(App *app, Config *cfg)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    app->window = glfwCreateWindow(cfg->width, cfg->height, cfg->title, NULL, NULL);
-    if(app->window == NULL){
+    m_window = glfwCreateWindow(cfg.m_width, cfg.m_height, cfg.m_title.c_str(), NULL, NULL);
+    if(m_window == nullptr){
         LOG_ERROR("Failed to open GLFW window");
-        glfwTerminate();
-        return -1;
+        return false;
     }
-    glfwMakeContextCurrent(app->window);
+
+    glfwMakeContextCurrent(m_window);
 
     glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK) {
         LOG_ERROR("Failed to initialize GLEW");
-        glfwTerminate();
-        return -1;
+        return false;
     }
 
-    glfwSetInputMode(app->window, GLFW_STICKY_KEYS, GL_TRUE);
+    glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE);
 
-    return 0;
+    return true;
 }
 
+bool App::initOpenGL()
+{
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    return true;
+}
+
+} // end of namespace ta3
+
+/*
 int init_app(App *app, Config *cfg)
 {
     LOG_INFO("Initializing app");
@@ -53,10 +138,7 @@ int init_app(App *app, Config *cfg)
         return -1;
     }
 
-    glUseProgram(app->simple_pg.pg.program);
-    glClearColor(0.0f, 0.0f, 0.4f, 1.0f);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
     return 0;
 }
@@ -118,10 +200,4 @@ int run_app(App *app)
           glfwWindowShouldClose(app->window) == 0 );
 
     return 0;
-}
-
-void destroy_app(App *app)
-{
-    destroy_simple_program(&app->simple_pg);
-    glfwTerminate();
-}
+} */
