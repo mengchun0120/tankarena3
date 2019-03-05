@@ -1,6 +1,8 @@
 #ifndef INCLUDE_SIMPLEPROGRAM
 #define INCLUDE_SIMPLEPROGRAM
 
+#include "vertexarray.h"
+#include "texture.h"
 #include "shaderprogram.h"
 
 namespace ta3 {
@@ -12,6 +14,8 @@ public:
     virtual ~SimpleProgram();
 
     bool initParam();
+
+    bool draw(const VertexArray& vertexArray);
 
 protected:
     GLint m_posLocation;
