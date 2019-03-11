@@ -4,24 +4,18 @@
 namespace ta3 {
 
 VertexArray::VertexArray()
-: m_vao(0)
-, m_vbo(0)
-, m_ebo(0)
-, m_hasTexture(false)
 {
+    reset();
 }
 
 VertexArray::VertexArray(const float*        vertexArray,
-                         unsigned int        vertexArraySize,
-                         bool                hasTexture,
+                         unsigned int        numVertices,
+                         bool                containTexCoord,
                          const unsigned int* indexArray,
-                         unsigned int        indexArraySize)
-: m_vao(0)
-, m_vbo(0)
-, m_ebo(0)
-, m_hasTexture(hasTexture)
+                         unsigned int        numIndices)
 {
-    load(vertexArray, vertexArraySize, hasTexture, indexArray, indexArraySize);
+    reset();
+    load(vertexArray, numVertices, containTexCoord, indexArray, numIndices);
 }
 
 VertexArray::~VertexArray()
@@ -31,11 +25,21 @@ VertexArray::~VertexArray()
     }
 }
 
+void VertexArray::reset()
+{
+    m_vertexArray = 0;
+    m_vertexBuffer = 0;
+    m_numVertices = 0;
+    m_containTexCoord = false;
+    m_indexBuffer = 0;
+    m_numIndices = 0;
+}
+
 bool VertexArray::load(const float*        vertexArray,
-                       unsigned int        vertexArraySize,
-                       bool                hasTexture,
+                       unsigned int        numVertices,
+                       bool                containTexCoord,
                        const unsigned int* indexArray,
-                       unsigned int        indexArraySize)
+                       unsigned int        numIndices)
 {
     if(valid()) {
         LOG_WARN("Trying to reset valid VertexArray");
@@ -47,70 +51,72 @@ bool VertexArray::load(const float*        vertexArray,
         return false;
     }
 
-    if(vertexArraySize == 0) {
-        LOG_ERROR("vertexArraySize cannot be zero");
+    if(numVertices == 0) {
+        LOG_ERROR("numVertices cannot be zero");
         return false;
     }
 
-    glGenVertexArrays(1, &m_vao);
-    if(m_vao == 0) {
-        LOG_ERROR("Failed to generate VAO: %d", glGetError());
+    glGenVertexArrays(1, &m_vertexArray);
+    if(m_vertexArray == 0) {
+        LOG_ERROR("Failed to generate vertex array: %d", glGetError());
         return false;
     }
 
-    glGenBuffers(1, &m_vbo);
-    if(m_vbo == 0) {
-        LOG_ERROR("Failed to generate VBO: %d", glGetError());
+    glGenBuffers(1, &m_vertexBuffer);
+    if(m_vertexBuffer == 0) {
+        LOG_ERROR("Failed to generate vertex buffer: %d", glGetError());
         destroy();
         return false;
     }
 
     if(indexArray != nullptr) {
-        if(indexArraySize == 0) {
-            LOG_ERROR("indexArraySize cannot be zero");
+        if(numIndices == 0) {
+            LOG_ERROR("numIndices cannot be zero");
             destroy();
             return false;
         }
 
-        glGenBuffers(1, &m_ebo);
-        if(m_ebo == 0) {
+        glGenBuffers(1, &m_indexBuffer);
+        if(m_indexBuffer == 0) {
             LOG_ERROR("Failed to generate EBO: %d", glGetError());
             destroy();
             return false;
         }
     }
 
-    glBindVertexArray(m_vao);
+    m_containTexCoord = containTexCoord;
+    m_numVertices = numVertices;
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertexArraySize, vertexArray, GL_STATIC_DRAW);
+    glBindVertexArray(m_vertexArray);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, numVertices * stride(), vertexArray, GL_STATIC_DRAW);
 
     if(indexArray != nullptr) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexArraySize, indexArray, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(unsigned int),
+                     indexArray, GL_STATIC_DRAW);
     }
 
-    m_hasTexture = hasTexture;
+    m_containTexCoord = containTexCoord;
 
     return true;
 }
 
 void VertexArray::destroy()
 {
-    if(m_ebo != 0) {
-        glDeleteBuffers(1, &m_ebo);
-        m_ebo = 0;
+    if(m_indexBuffer != 0) {
+        glDeleteBuffers(1, &m_indexBuffer);
     }
 
-    if(m_vbo != 0) {
-        glDeleteBuffers(1, &m_vbo);
-        m_vbo = 0;
+    if(m_vertexBuffer != 0) {
+        glDeleteBuffers(1, &m_vertexBuffer);
     }
 
-    if(m_vao != 0) {
-        glDeleteVertexArrays(1, &m_vao);
-        m_vao = 0;
+    if(m_vertexArray != 0) {
+        glDeleteVertexArrays(1, &m_vertexArray);
     }
+
+    reset();
 }
 
 } // end of namespace ta3

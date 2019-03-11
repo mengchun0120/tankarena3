@@ -15,7 +15,9 @@ public:
 
     bool initParam();
 
-    bool draw(const VertexArray& vertexArray);
+    bool draw(GLenum mode, const VertexArray& vertexArray, const Texture& texture);
+
+    bool draw(GLenum mode, const VertexArray& vertexArray, const float* color);
 
 protected:
     GLint m_posLocation;

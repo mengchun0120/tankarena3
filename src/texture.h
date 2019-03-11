@@ -38,6 +38,11 @@ public:
         return m_height;
     }
 
+    GLuint textureId() const
+    {
+        return m_texture;
+    }
+
 private:
     GLuint m_texture;
     int m_width;

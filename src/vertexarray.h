@@ -2,59 +2,83 @@
 #define INCLUDE_VERTEXARRAY
 
 #include <GL/glew.h>
+#include "constants.h"
 
 namespace ta3 {
 
 class VertexArray {
 public:
+    static const unsigned int VERTEX_OFFSET = 0;
+    static const unsigned int TEX_COORD_OFFSET = Constants::VERTEX_SIZE;
+
     VertexArray();
 
     VertexArray(const float*        vertexArray,
-                unsigned int        vertexArraySize,
-                bool                hasTexture=true,
+                unsigned int        numVertices,
+                bool                containTexCoord=false,
                 const unsigned int* indexArray=nullptr,
-                unsigned int        indexArraySize=0);
+                unsigned int        numIndices=0);
 
     virtual ~VertexArray();
 
     bool load(const float*        vertexArray,
-              unsigned int        vertexArraySize,
-              bool                hasTexture=true,
+              unsigned int        numVertices,
+              bool                containTexCoord=false,
               const unsigned int* indexArray=nullptr,
-              unsigned int        indexArraySize=0);
+              unsigned int        numIndices=0);
 
     void destroy();
 
     bool valid() const
     {
-        return m_vao != 0;
+        return m_vertexArray != 0;
     }
 
-    GLuint vao() const
+    GLuint vertexArray() const
     {
-        return m_vao;
+        return m_vertexArray;
     }
 
-    GLuint vbo() const
+    unsigned int numVertices() const
     {
-        return m_vbo;
+        return m_numVertices;
     }
 
-    GLuint ebo() const
+    GLuint vertexBuffer() const
     {
-        return m_ebo;
+        return m_vertexBuffer;
     }
 
-    bool hasTexture() const
+    bool containTexCoord() const
     {
-        return m_hasTexture;
+        return m_containTexCoord;
+    }
+
+    unsigned int numIndices() const
+    {
+        return m_numIndices;
+    }
+
+    GLuint indexBuffer() const
+    {
+        return m_indexBuffer;
+    }
+
+    unsigned int stride() const
+    {
+        return m_containTexCoord ? Constants::VERTEX_TEX_COORD_SIZE : Constants::VERTEX_SIZE;
     }
 
 protected:
-    GLuint m_vao;
-    GLuint m_vbo;
-    GLuint m_ebo;
-    bool m_hasTexture;
+    void reset();
+
+protected:
+    GLuint m_vertexArray;
+    unsigned int m_numVertices;
+    GLuint m_vertexBuffer;
+    bool m_containTexCoord;
+    unsigned int m_numIndices;
+    GLuint m_indexBuffer;
 };
 
 } // end of namespace ta3
